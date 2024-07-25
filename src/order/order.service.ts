@@ -3,7 +3,7 @@ import { ProductsService } from 'src/products/products.service';
 import { Product } from 'src/products/product.interface';
 import { User } from 'src/users/user.interface';
 import { sendResponse } from 'src/common/sendResponse';
-import { Order_items } from 'src/order-items/order_items.interface';
+import { OrderItems } from 'src/order-items/order_items.interface';
 import { URL } from 'src/common/app.url';
 import { OrderDto } from './dtos/create.dto';
 import { UsersService } from 'src/users/users.service';
@@ -24,9 +24,9 @@ export class OrderService {
         throw new HttpException('you should create wallet to pay ',HttpStatus.BAD_REQUEST)
     }
      await this.checkStatus(user.id)
-     const order_items:Order_items[]=await this.getItems(orderItemIds.ids,user.id)
+     const order_items:OrderItems[]=await this.getItems(orderItemIds.ids,user.id)
      console.log(order_items)
-     const finalItems:Order_items[]= await this.checkStock(order_items)
+     const finalItems:OrderItems[]= await this.checkStock(order_items)
      const total_price:number=await this.evaluateTotalPrice(finalItems)
      
      const query=`INSERT INTO orders (total_amount,user_id,order_date,order_status)
@@ -56,7 +56,7 @@ export class OrderService {
       throw new HttpException(err,err.status||HttpStatus.INTERNAL_SERVER_ERROR)
      }
      finally{
-      await this.dataService.client.end()
+      this.dataService.client.release()
      }
     }
     
@@ -91,7 +91,7 @@ export class OrderService {
         return order_items
     }
 
-    async checkStock(Items:Order_items[]) {
+    async checkStock(Items:OrderItems[]) {
         let finalItems=[]
       //  await this.dataService.connectToDb()
         for (let item of Items){
@@ -120,7 +120,7 @@ export class OrderService {
     return finalItems
     }
 
-    async evaluateTotalPrice(Items:Order_items[]) {
+    async evaluateTotalPrice(Items:OrderItems[]) {
       let totalPrice=0
       for (let item of Items){
           totalPrice+=item.total_price
@@ -128,7 +128,7 @@ export class OrderService {
       return totalPrice
   }
 
-  async deleteFromOrderItems(items:Order_items[]) {
+  async deleteFromOrderItems(items:OrderItems[]) {
    //  await this.dataService.connectToDb()
       for( let item of items){
       try{
@@ -140,7 +140,7 @@ export class OrderService {
   }
 }
 
-async reduceProduct(items:Order_items[]) {
+async reduceProduct(items:OrderItems[]) {
  // await this.dataService.connectToDb()
   for( let item of items){
     const query=`SELECT p.quantity,p.id FROM order_items o JOIN products p ON 
@@ -171,7 +171,7 @@ async checkStatus(userId:number){
    throw new HttpException(err,err.status||HttpStatus.INTERNAL_SERVER_ERROR)
   }
 }
-async assignOrderId(items:Order_items[],userId:number){
+async assignOrderId(items:OrderItems[],userId:number){
   console.log('Connecting to database');
   // console.log('Connected to database');
   const query=`SELECT id FROM orders WHERE user_id=$1 AND order_status=$2`

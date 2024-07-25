@@ -8,7 +8,7 @@ export class WalletController {
     constructor(private walletService:WalletService){}
     @Post()
     @UseGuards(authGuard)
-    async createWallet(@Body() {budget},@Request() {user}){
+    async createWallet(@Body() {budget},@Request() {user}) {
     return await this.walletService.createWallet(budget,user)
           
    }

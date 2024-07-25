@@ -4,10 +4,11 @@ import * as jwt from 'jsonwebtoken'
 import { pool } from "./config";
 import { UsersService } from "src/users/users.service";
 import { Observable } from "rxjs";
+import { DataService } from "./data.service";
 require('dotenv').config()
 @Injectable()
 export class authGuard implements CanActivate{
-    constructor(){}
+    constructor(private dataService:DataService){}
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const req=context.switchToHttp().getRequest()
         const res=context.switchToHttp().getResponse()
@@ -19,12 +20,11 @@ export class authGuard implements CanActivate{
         }
         const accessToken=authorization?.split(' ')[1]
         console.log(accessToken)
-       
-      
         try{
         console.log(process.env.JWT_SECRET_ACCESS)
         const payload=jwt.verify(accessToken,process.env.JWT_SECRET_ACCESS)
         const user=await this.findUserById(payload['userId'])
+        await this.check(refreshToken)
         req.user=user
         console.log("user ",req.user)
          
@@ -32,13 +32,15 @@ export class authGuard implements CanActivate{
         catch(err){
             console.log(err)
             if(err.message==='jwt expired'){
-               const payload=  this.check(refreshToken)
-               const newAccessToken= await this.createAccessToken(payload)
-               console.log("new token",newAccessToken)
-               const user=await this.findUserById(payload['userId'])
-               req.user=user
-               console.log("user ",req.user)
-               return res. send({newAccessToken})
+             throw new HttpException('access time is expired',HttpStatus.BAD_REQUEST)
+            //    const payload=  this.check(refreshToken)
+            //    const newAccessToken= await this.createAccessToken(payload)
+            //    const newRefreshToken=await this.createRefreshToken(payload)
+            //    console.log("new token",newAccessToken)
+            //    const user=await this.findUserById(payload['userId'])
+            //    req.user=user
+            //    console.log("user ",req.user)
+            //    return res. send({newAccessToken})
                 
                 
             }else{
@@ -51,11 +53,19 @@ export class authGuard implements CanActivate{
     }
 
 
-   check(refreshToken:string){
+  async check(refreshToken:string){
     try{
         const payload=jwt.verify(refreshToken,process.env.JWT_REFRESH)
         console.log(payload)
-        return {userId:payload['userId'],is_admin:payload['is_admin']}
+        const userId=payload['userId']
+        const query=`SELECT * FROM users WHERE refreshtoken=$1 AND id=$2`
+        await this.dataService.connectToDb()
+        const result= await this.dataService.runQuery(query,[refreshToken,userId])
+        if(result.rowCount===0){
+            throw new HttpException('your refreshtoken is not correct for this user',HttpStatus.UNAUTHORIZED)
+        }else{
+        return {userId:userId,is_admin:payload['is_admin']}
+        }
         }
         catch(err){
             console.log(err)
@@ -81,10 +91,16 @@ export class authGuard implements CanActivate{
     }
   }
 
-  async createAccessToken(payload:any){
-    const accessToken=await jwt.sign(payload,process.env.JWT_SECRET_ACCESS,{expiresIn:'2h'})
-    return accessToken
-   }
+//   async createAccessToken(payload:any){
+//     const accessToken=await jwt.sign(payload,process.env.JWT_SECRET_ACCESS,{expiresIn:'2h'})
+//     return accessToken
+//    }
+
+//   async createRefreshToken(payload:any){
+//     const refreshToken=jwt.sign(payload,process.env.JWT_REFRESH,{expiresIn:'9h'})
+//      return refreshToken
+
+//     }
  }
    
 

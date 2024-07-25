@@ -1,8 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { pool } from 'src/common/config';
 import { CreateUsers } from 'src/auth/dtos/create_user..dto';
 import { sendEmail } from 'src/users/sendEmail';
-import { UpdateUser } from 'src/users/dtos/update_user.dto';
 import { User } from 'src/users/user.interface';
 import { sendResponse } from 'src/common/sendResponse';
 import * as jwt from 'jsonwebtoken'
@@ -10,8 +8,6 @@ import { addMinutes } from 'date-fns';
 import { URL } from 'src/common/app.url';
 import * as bcrypt from 'bcrypt'
 import { RetriveDto } from './dtos/retrivepassword.dto';
-import { Res } from '@nestjs/common';
-import { Response } from 'express';
 import { DataService } from 'src/common/data.service';
 @Injectable()
 export class AuthService {
@@ -82,12 +78,12 @@ export class AuthService {
          }
 
         const hashedPassword=await this.hashingPassword(body.password)
-        const query=`INSERT INTO users (firstname,lastname,password,email,is_admin,is_delete)
+        const query=`INSERT INTO users (firstname,lastname,password,email,is_admin,is_delete,refreshToken)
         VALUES($1 , $2 , $3 , $4 , $5 , $6)`
     
         let result=await this.dataService.runQuery(query,
             [body.firstname,body.lastname
-                ,hashedPassword,body.email,false,false])
+                ,hashedPassword,body.email,false,false,null])
         const response=sendResponse('','new user is created')
         return response
             }catch(err){
@@ -98,14 +94,14 @@ export class AuthService {
     
     async login(email:string,password:string) {
        await this.dataService.connectToDb()
-       const query=`SELECT * FROM users WHERE email=($1) AND is_delete=false`
+       const query=`SELECT * FROM users WHERE email=$1 AND is_delete=false`
         try{
         let result=await this.dataService.runQuery(query,[email])
         console.log(result.rows[0])
         if(result.rowCount===0){
             throw new HttpException('you should register first',HttpStatus.BAD_REQUEST)
         }
-        const user=result.rows[0]
+        const user:User=result.rows[0]
         console.log(user.password,password)
         const isPassword=await bcrypt.compare(password,user.password)
         console.log(isPassword)
@@ -114,8 +110,9 @@ export class AuthService {
         }
         
         const payload={userId:user.id,is_admin:user.is_admin}
-        const accessToken=this.createAccessToken(payload)
-        const refreshToken=this.createRefreshToken(payload)
+        const accessToken= this.createAccessToken(payload)
+        const refreshToken= this.createRefreshToken(payload)
+        await this.saveRefreshTOdb(refreshToken,user.id)
         const response=sendResponse('',result.rows[0])
         return {response, accessToken,refreshToken}
       
@@ -125,7 +122,7 @@ export class AuthService {
         }
     }
 
-    async changePassword({email,oldPassword,newPassword}) {
+    async changePassword({email,oldPassword,newPassword}) :Promise<Object> {
         await this.dataService.connectToDb()
          const query=`SELECT * FROM users WHERE email=($1) AND  password=$2 AND is_delete=false`
         try{
@@ -196,7 +193,7 @@ export class AuthService {
         return hashedPassword
     }
 
-    createAccessToken(payload:any){
+     createAccessToken(payload:any){
      const accessToken=jwt.sign(payload,process.env.JWT_SECRET_ACCESS,{expiresIn:'2h'})
      return accessToken
     }
@@ -219,21 +216,46 @@ export class AuthService {
     }
     }
     createRefreshToken(payload:any){
-    const refreshToken=jwt.sign(payload,process.env.JWT_REFRESH,{expiresIn:'4h'})
-    this.saveRefreshTokenRecord(refreshToken)
+    const refreshToken=jwt.sign(payload,process.env.JWT_REFRESH,{expiresIn:'9h'})
+    console.log(refreshToken)
      return refreshToken
 
     }
+    async saveRefreshTOdb(newRefreshToken:string,userId:number) {
+        const query=`UPDATE users SET refreshtoken=$1 WHERE id=$2`
+        await this.dataService.runQuery(query,[newRefreshToken,userId])
 
-    async saveRefreshTokenRecord(token:string){
-        const query=`INSERT INTO refreshtoken (value) VALUES ($1)`
-        let client =await pool.connect()
+    }
+    async generateTokens(req:any){
+    const oldRefreshToken=req.headers.refreshtoken
+    const payload=await this.validateRefresh(oldRefreshToken)
+    const newAccessToken=this.createAccessToken(payload)
+    const newRefreshToken=this.createRefreshToken(payload)
+    await this.saveRefreshTOdb(newRefreshToken,payload['userId'])
+    return {newAccessToken,newRefreshToken}
+    }
+
+    async validateRefresh(refreshToken:string){
         try{
-        let result=await client.query(query,[token])
-        
-    }catch(err){
-        throw new HttpException(err,err.status||HttpStatus.INTERNAL_SERVER_ERROR)
-    }
-    }
-
+            console.log(refreshToken)
+            const payload=jwt.verify(refreshToken,process.env.JWT_REFRESH)
+            console.log(payload)
+            const userId=payload['userId']
+            await this.dataService.connectToDb()
+            const query=`SELECT * FROM users WHERE refreshtoken=$1 AND id=$2`
+            const result= await this.dataService.runQuery(query,[refreshToken,userId])
+            if(result.rowCount===0){
+                throw new HttpException('your refreshtoken is not correct for this user',HttpStatus.UNAUTHORIZED)
+            }else{
+            return {userId:userId,is_admin:payload['is_admin']}
+            }
+            }
+            catch(err){
+                console.log(err)
+                if(err.message==='jwt expired'){
+                    throw new HttpException('your access time has expired , please register again',HttpStatus.UNAUTHORIZED)
+                }
+                throw new HttpException(err,err.status||HttpStatus.BAD_GATEWAY)
+            }
+       }
 }

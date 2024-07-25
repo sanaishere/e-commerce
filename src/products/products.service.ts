@@ -6,7 +6,6 @@ import { Product } from './product.interface';
 import { UpdateProductDto } from './dtos/update_product.dto';
 import { pagination } from 'src/common/pagination';
 import { URL } from 'src/common/app.url';
-import { Order_items } from 'src/order-items/order_items.interface';
 import { DataService } from 'src/common/data.service';
 import { PaginateDto } from 'src/common/paginate.dto';
 @Injectable()

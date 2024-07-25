@@ -4,7 +4,7 @@ require('dotenv').config()
 console.log(process.env.POSTGRES_PASSWORD)
 export const pool = new Pool({
   user: 'postgres',
-  host: 'localhost',
+  host: 'postgres_db',
   database: 'ecommerce_db',
   password:process.env.POSTGRES_PASSWORD ,
   port: 5432,

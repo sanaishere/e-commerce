@@ -1,4 +1,4 @@
-export interface Order_items{
+export interface OrderItems{
     id:number,
     number:number,
     product_id:number,

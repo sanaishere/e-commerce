@@ -3,7 +3,8 @@ import { Controller,Post,Get,Delete,Put,Body,
     Param,Request,
     HttpCode,
     HttpStatus,
-    Res
+    Res,
+    UseGuards
  } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
@@ -16,6 +17,7 @@ import { RetriveDto } from './dtos/retrivepassword.dto';
 import { Response } from 'express';
 import { EmailDto } from './dtos/email.dto';
 import { ForgetPasswordDto } from './dtos/forgetPassword.dto';
+import { authGuard } from 'src/common/auth.guard';
 require('dotenv').config()
 @Controller('auth')
 export class AuthController {
@@ -38,11 +40,11 @@ async login(@Body() body:LoginDto){
 return await this.authService.login(body.email,body.password)
 }
 
-// @Post('verify')
-// @HttpCode(HttpStatus.CREATED)
-// async verifyEmail(@Body() {otp},@Res() res:any){
-// return await this.authService.verificationEmail(otp)
-// }
+@Get('generateTokens')
+@HttpCode(HttpStatus.CREATED)
+async generateTokens(@Request() req:any){
+return await this.authService.generateTokens(req)
+}
 
 
 @Post('forgetpassword')
@@ -58,7 +60,7 @@ async retrievePassword(@Body() body:RetriveDto,@Request() req:any){
 
 @Put('changePassword')
 @HttpCode(HttpStatus.CREATED)
-async changePassword(@Body() body:ForgetPasswordDto){
+async changePassword(@Body() body:ForgetPasswordDto) {
     return await this.authService.changePassword(body)
 }
 

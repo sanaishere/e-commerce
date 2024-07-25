@@ -1,4 +1,4 @@
-<p align="center">
+<!-- <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
 </p>
 
@@ -6,7 +6,7 @@
 [circleci-url]: https://circleci.com/gh/nestjs/nest
 
   <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
+    <p align="center"> -->
 <!-- <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
@@ -23,8 +23,10 @@
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
 ## Description
-this is a simple e-commerce project,using nest js and postgresql,we use unit test ,too.in project we 
-have 2 roles:Admin and user,
+this is a simple e-commerce project,using nest js and postgresql,we use unit test in some cases,too.in project we 
+have 2 roles:Admin and user,you can add product to your basket,then purchase it,and payment is by your wallet.
+you should create wallet then you can charge every time you like.you can comment and rate on product you bought.
+
 <!-- [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository. -->
 
 ## Installation
@@ -34,11 +36,13 @@ $ yarn install
 ```
 
 ## Running the app
+you can run normally by cloning main or you can use docker in docker branch.
+if you use docker ,you should put name service  for database in the host of the database .
+
 
 ```bash
 # development
 $ yarn run start
-
 # watch mode
 $ yarn run start:dev
 
@@ -51,13 +55,11 @@ $ yarn run start:prod
 ```bash
 # unit tests
 $ yarn run test
-
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
 ```
+## DOCKER
+
+$ docker build -t containername .
+$ docker-compose up
 
 <!-- ## Support
 

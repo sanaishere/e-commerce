@@ -1,115 +1,101 @@
--- CREATE TABLE users (
---    user_id SERIAL PRIMARY KEY,
---    firstname varchar(50) not null,
---    lastname varchar(50) not null,
---    password varchar(200) not null,
---    email  varchar(50) not null,
---    is_admin boolean DEFAULT false,
---    is_delete boolean DEFAULT false
+CREATE TABLE users (
+   id SERIAL PRIMARY KEY,
+   firstname varchar(50) not null,
+   lastname varchar(50) not null,
+   password varchar(200) not null,
+   email  varchar(50) UNIQUE not null,
+   is_admin boolean DEFAULT false,
+   is_delete boolean DEFAULT false,
+   refreshToken varchar(200) DEFAULT null
 
--- );
--- ALTER TABLE users RENAME COLUMN user_id TO id;
--- ALTER TABLE users ADD UNIQUE (email);
--- CREATE TABLE categories (
---    id SERIAL PRIMARY KEY,
---    name varchar(50) not null,
---    is_delete BOOLEAN DEFAULT false
--- );
+);
 
--- CREATE TABLE products (
---    id SERIAL PRIMARY KEY,
---    name varchar(50) not null,
---    price INTEGER not null,
---    quantity INTEGER not null,
---    image_src  varchar(100) DEFAULT null,
---    category_id INTEGER ,
---    is_delete boolean DEFAULT false,
---    FOREIGN KEY (category_id) REFERENCES categories(id)
--- );
+CREATE TABLE categories (
+   id SERIAL PRIMARY KEY,
+   name varchar(50) not null,
+   is_delete BOOLEAN DEFAULT false
+);
 
--- CREATE TABLE comment (
---    id SERIAL PRIMARY KEY,
---    text varchar(200) not null,
---    user_id INTEGER not null,
---    product_id INTEGER NOT NULL,
---    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
---    is_delete BOOLEAN DEFAULT false,
---    FOREIGN KEY (user_id) REFERENCES users(id),
---    FOREIGN KEY (product_id) REFERENCES products(id)
--- );
+CREATE TABLE products (
+   id SERIAL PRIMARY KEY,
+   name varchar(50) not null,
+   price INTEGER not null,
+   quantity INTEGER not null,
+   image_src  varchar(100) DEFAULT null,
+   category_id INTEGER ,
+   is_delete boolean DEFAULT false,
+   FOREIGN KEY (category_id) REFERENCES categories(id)
+);
 
--- CREATE TABLE review (
---    id SERIAL PRIMARY KEY,
---    user_id INTEGER not null,
---    product_id INTEGER NOT NULL,
---    rating INTEGER NOT NULL,
---    FOREIGN KEY (user_id) REFERENCES users(id),
---    FOREIGN KEY (product_id) REFERENCES products(id)
--- );
+CREATE TABLE comment (
+   id SERIAL PRIMARY KEY,
+   text varchar(200) not null,
+   user_id INTEGER not null,
+   product_id INTEGER NOT NULL,
+   date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   is_delete BOOLEAN DEFAULT false,
+   FOREIGN KEY (user_id) REFERENCES users(id),
+   FOREIGN KEY (product_id) REFERENCES products(id)
+);
 
--- CREATE TABLE payment_info (
---    id SERIAL PRIMARY KEY,
---    user_id INTEGER not null,
---    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
---    expense INTEGER not null,
---    status VARCHAR(20) CHECK (status IN ( 'successful', 'unsuccessful')),
---    FOREIGN KEY (user_id) REFERENCES users(id)
--- );
+CREATE TABLE review (
+   id SERIAL PRIMARY KEY,
+   user_id INTEGER not null,
+   product_id INTEGER NOT NULL,
+   rating INTEGER NOT NULL,
+   FOREIGN KEY (user_id) REFERENCES users(id),
+   FOREIGN KEY (product_id) REFERENCES products(id)
+);
 
--- CREATE TABLE orders (
---    id SERIAL PRIMARY KEY,
---    total_amount INTEGER NOT NULL,
---    user_id INTEGER NOT NULL,
---    order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
---    order_status varchar(20) CHECK (order_status In ('in progress','completed')),
---    FOREIGN KEY (user_id) REFERENCES users(id)
--- );
 
--- CREATE TABLE order_items (
---    id SERIAL PRIMARY KEY,
---    number INTEGER NOT NULL,
---    price INTEGER NOT NULL,
---    total_price INTEGER NOT NULL,
---    user_id INTEGER NOT NULL,
---    product_id INTEGER NOT NULL,
---    order_id INTEGER DEFAULT NULL,
---    FOREIGN KEY (user_id) REFERENCES users(id),
---    FOREIGN KEY (product_id) REFERENCES products(id),
---    FOREIGN KEY (order_id) REFERENCES orders(id)
--- );
+CREATE TABLE orders (
+   id SERIAL PRIMARY KEY,
+   total_amount INTEGER NOT NULL,
+   user_id INTEGER NOT NULL,
+   order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   order_status varchar(55) ,
+   FOREIGN KEY (user_id) REFERENCES users(id)
+);
 
--- create Table refreshToken(
---     id  SERIAL PRIMARY KEY,
---     value varchar(20) DEFAULT NULL
--- );
+CREATE TABLE order_items (
+   id SERIAL PRIMARY KEY,
+   number INTEGER NOT NULL,
+   price INTEGER NOT NULL,
+   total_price INTEGER NOT NULL,
+   user_id INTEGER NOT NULL,
+   product_id INTEGER NOT NULL,
+   order_id INTEGER DEFAULT NULL,
+   is_delete boolean DEFAULT False,
+   FOREIGN KEY (user_id) REFERENCES users(id),
+   FOREIGN KEY (product_id) REFERENCES products(id),
+   FOREIGN KEY (order_id) REFERENCES orders(id)
+);
 
--- create Table otp(
---     id  SERIAL PRIMARY KEY,
---     value INTEGER DEFAULT NULL
--- );
+create Table refreshToken(
+    id  SERIAL PRIMARY KEY,
+    value varchar(200) DEFAULT NULL
+);
 
--- ALTER TABLE otp 
--- ALTER COLUMN expiresIn TYPE
--- TIMESTAMP 
--- ALTER TABLE refreshToken ALTER COLUMN value TYPE varchar(200)
--- ALTER TABLE refreshToken ALTER COLUMN value TYPE varchar(200)
--- ALTER TABLE orders ADD CONSTRAINT order_status CHECK  (order_status In ('in progress','completed','unsuccessfull'))
---  ALTER TABLE orders DROP COLUMN is_delete ;
---  ALTER TABLE order_items ADD COLUMN is_delete boolean DEFAULT False
--- Drop TABLE payment_info;
--- CREATE TABLE Wallet (
---    id SERIAL PRIMARY KEY,
---    user_id INTEGER not null,
---    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
---    updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
---    budget INTEGER not null,
---    FOREIGN KEY (user_id) REFERENCES users(id)
--- );
+create Table otp(
+    id  SERIAL PRIMARY KEY,
+    value INTEGER DEFAULT NULL,
+    expiresIn TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
---  ALTER TABLE orders ADD CONSTRAINT order_status CHECK  (order_status In ('in progress','unsuccessfull','completed'))
--- ALTER TABLE orders ADD COLUMN order_status varchar(55)
--- CREATE TABLE verifyToken (
---     id  SERIAL PRIMARY KEY,
---     value varchar(255) DEFAULT NULL
--- )
--- ALTER TABLE verifytoken ALTER COLUMN value TYPE varchar(200)
+CREATE TABLE Wallet (
+   id SERIAL PRIMARY KEY,
+   user_id INTEGER not null,
+   created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   budget INTEGER not null,
+   FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+
+CREATE TABLE verifyToken (
+    id  SERIAL PRIMARY KEY,
+    value varchar(200) DEFAULT NULL
+);
+
+
+

@@ -4,7 +4,7 @@ import { ProductsService } from 'src/products/products.service';
 import { Product } from 'src/products/product.interface';
 import { User } from 'src/users/user.interface';
 import { sendResponse } from 'src/common/sendResponse';
-import { Order_items } from './order_items.interface';
+import { OrderItems } from './order_items.interface';
 import { UpdateDto } from './dtos/update.dto';
 import { UsersService } from 'src/users/users.service';
 import { DataService } from 'src/common/data.service';
@@ -47,7 +47,7 @@ export class OrderItemsService {
         let query=`SELECT o.id,o.number,o.price , o.total_price,p.name,p.image_src FROM order_items o
         LEFT JOIN products p ON o.product_id=p.id WHERE o.user_id=$1 AND o.is_delete=false`
         try{
-         let order_items:Order_items[]=(await this.dataService.runQuery(query,[userId])).rows
+         let order_items:OrderItems[]=(await this.dataService.runQuery(query,[userId])).rows
          const response=sendResponse('',order_items)
         return response
         }catch(err){
@@ -119,7 +119,7 @@ export class OrderItemsService {
         if(result.rowCount===0){
           throw new HttpException('there is no order_item with this id',HttpStatus.NOT_FOUND)
         }
-        const order_item:Order_items=result.rows[0]
+        const order_item:OrderItems=result.rows[0]
         return order_item
     }catch(err){
         throw new HttpException(err,err.status||HttpStatus.INTERNAL_SERVER_ERROR)
